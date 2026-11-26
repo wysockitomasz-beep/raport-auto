@@ -60,19 +60,34 @@ def scrape_listings():
         )
         page = context.new_page()
 
-        for source_name, url in SEARCH_URLS.items():
+for source_name, url in SEARCH_URLS.items():
             try:
                 page.goto(url, timeout=45000)
                 page.wait_for_timeout(3500)
-                
+                page.mouse.wheel(0, 1500)
+                page.wait_for_timeout(1500)
+
                 links = page.eval_on_selector_all(
-                    "a[href*='/oferta/'], a[href*='/oferty/']",
+                    "a[href*='/oferta/'], a[href*='/oferty/'], a[href*='/ogloszenie/']",
                     "els => els.map(e => e.href.split('#')[0])"
                 )
+
+                # Dodatkowe wsparcie dla Autoplaca, jeśli linki mają inną ścieżkę
+                if "autoplac.pl" in url and not links:
+                    links = page.eval_on_selector_all(
+                        "a[href*='/oferty/samochody-osobowe/']",
+                        "els => els.map(e => e.href.split('#')[0])"
+                    )
+
+                print(f"{source_name}: znaleziono {len(set(links))} linków")
                 all_found_links.update(links)
-                
+
                 text = page.inner_text("main")
-                collected_data.append(f"=== ŹRÓDŁO: {source_name} ===\nLINKI:\n" + "\n".join(set(links[:15])) + f"\nTREŚĆ STRONY:\n{text[:7000]}")
+                collected_data.append(
+                    f"=== ŹRÓDŁO: {source_name} ===\nLINKI:\n"
+                    + "\n".join(set(links[:15]))
+                    + f"\nTREŚĆ STRONY:\n{text[:7000]}"
+                )
             except Exception as e:
                 print(f"Błąd pobierania {source_name}: {e}")
 
