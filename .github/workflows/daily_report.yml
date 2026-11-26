@@ -1,0 +1,42 @@
+name: Codzienny Raport Samochodowy
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # Uruchamia się codziennie o 7:00 UTC (8:00 rano w Polsce)
+  workflow_dispatch:    # Dodaje przycisk do ręcznego uruchomienia w dowolnej chwili
+
+permissions:
+  contents: write       # Pozwala skryptowi zapisać plik seen.txt z historią ogłoszeń
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobranie repozytorium
+        uses: actions/checkout@v4
+
+      - name: Konfiguracja Pythona
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalacja bibliotek
+        run: |
+          pip install google-genai playwright
+          playwright install chromium
+
+      - name: Uruchomienie agenta i wysyłka maila
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+        run: python agent.py
+
+      - name: Zapisanie sprawdzonych ogłoszeń
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add seen.txt || true
+          git commit -m "Aktualizacja listy ogłoszeń" || exit 0
+          git push
