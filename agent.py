@@ -106,23 +106,56 @@ def main():
     {raw_content[:28000]}
     """
 
-    import time
-    from google.genai import errors
+import time
+from google.genai import errors
 
-    response = None
-    for attempt in range(3):
+# 1. Pobierz listę modeli dostępnych dla Twojego klucza API
+available_models = []
+try:
+    for m in client.models.list():
+        name = m.name.replace("models/", "")
+        if "flash" in name and "embedding" not in name and "image" not in name and "tts" not in name:
+            available_models.append(name)
+except Exception as e:
+    print(f"Nie udało się pobrać listy modeli: {e}")
+
+# Preferowane modele na początku (z fallbackiem na resztę znalezionych flash)
+candidate_models = []
+for preferred in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"]:
+    if preferred in available_models:
+        candidate_models.append(preferred)
+for m in available_models:
+    if m not in candidate_models:
+        candidate_models.append(m)
+
+if not candidate_models:
+    candidate_models = ["gemini-3.8-flash"]
+
+print("Kandydaci modeli:", candidate_models[:5])
+
+# 2. Próbuj po kolei aż do uzyskania odpowiedzi
+response = None
+for model_name in candidate_models[:5]:
+    for attempt in range(2):
         try:
+            print(f"Próbuję modelu: {model_name} (próba {attempt + 1})...")
             response = client.models.generate_content(
-                model="gemini-3.8-flash-lite",
+                model=model_name,
                 contents=prompt,
             )
             break
+        except errors.ClientError as e:
+            print(f"Błąd klienta dla {model_name}: {e}")
+            break
         except errors.ServerError as e:
-            print(f"Próba {attempt + 1}/3 nieudana (błąd serwera): {e}")
-            if attempt < 2:
-                time.sleep(15)
-            else:
-                raise
+            print(f"Błąd serwera (503) dla {model_name}: {e}")
+            if attempt == 0:
+                time.sleep(10)
+    if response is not None:
+        break
+
+if response is None:
+    raise RuntimeError("Żaden z dostępnych modeli nie odpowiedział poprawnie.")
 
     today = datetime.now().strftime("%d.%m.%Y")
     subject = f"🚗 Raport Aut (Automat / Benzyna / Klima) - {today}"
