@@ -94,7 +94,7 @@ def main():
 - Skrzynia: WYŁĄCZNIE automatyczna
 - Paliwo: Benzyna (lub benzyna+LPG)
 - Nadwozie: 4 lub 5 drzwi, OBOWIĄZKOWO klimatyzacja
-- Dopuszczalne modele: Toyota (Yaris, Auris, Corolla), Seat (Altea, Ibiza, Toledo), Audi A3, Honda Jazz.
+- Dopuszczalne modele: Toyota (Yaris, Auris, Corolla), Seat 1,6 MPI (Altea, Ibiza, Toledo), Audi A3 (1,6 MPI), Honda Jazz.
 
     ZADANIE:
 1. Przeanalizuj zebrane ogłoszenia. Skup się szczególnie na nowych linkach: {list(new_links)[:20]}.
