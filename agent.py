@@ -106,9 +106,23 @@ def main():
     {raw_content[:28000]}
     """
 
-    response = client.models.generate_content(
-        model="gemini-3.8-flash",        contents=prompt,
-    )
+    import time
+    from google.genai import errors
+
+    response = None
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt,
+            )
+            break
+        except errors.ServerError as e:
+            print(f"Próba {attempt + 1}/3 nieudana (błąd serwera): {e}")
+            if attempt < 2:
+                time.sleep(15)
+            else:
+                raise
 
     today = datetime.now().strftime("%d.%m.%Y")
     subject = f"🚗 Raport Aut (Automat / Benzyna / Klima) - {today}"
