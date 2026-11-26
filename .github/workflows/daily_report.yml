@@ -2,7 +2,7 @@ name: Codzienny Raport Samochodowy
 
 on:
   schedule:
-    - cron: '0 7 * * *' # Uruchamia się codziennie o 7:00 UTC (8:00 rano w Polsce)
+    - cron: '0 5 * * *' # Uruchamia się codziennie o 7:00 UTC (8:00 rano w Polsce)
   workflow_dispatch:    # Dodaje przycisk do ręcznego uruchomienia w dowolnej chwili
 
 permissions:
